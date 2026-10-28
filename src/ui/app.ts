@@ -30,7 +30,10 @@ export function renderView() {
 }
 
 export function renderResume() {
-  $('#resume').classList.toggle('on', !!S.active.w && !sheets.live.classList.contains('open'));
+  const liveOpen = sheets.live.classList.contains('open');
+  $('#resume').classList.toggle('on', !!S.active.w && !liveOpen);
+  // The full rest bar shows only inside the workout; minimized, the pill carries the countdown.
+  document.body.classList.toggle('live-open', liveOpen);
   tick();
 }
 

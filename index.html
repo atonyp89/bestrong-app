@@ -13,8 +13,15 @@
 <div class="app">
   <main class="view" id="view"></main>
   <nav class="nav">
-    <button class="resume" id="resume" data-act="resume"><span>Workout in progress</span><span class="t num" data-elapsed>0:00</span></button>
-    <div class="tabs" role="tablist">
+    <div class="resume pill" id="resume">
+      <button class="rbtn" data-act="resume" aria-label="Open workout"><svg class="i"><use href="#i-up"/></svg></button>
+      <button class="rmid" data-act="resume" aria-label="Open workout">
+        <span class="rtitle"><span class="dot" aria-hidden="true"></span><b>Workout</b> <span class="num" data-elapsed-short>0s</span></span>
+        <span class="rsub" id="resumeSub"></span>
+      </button>
+      <button class="rbtn danger" data-act="cancel-workout" aria-label="Discard workout"><svg class="i"><use href="#i-trash"/></svg></button>
+    </div>
+    <div class="tabs pill" role="tablist">
       <button data-tab="history" id="tab-history"><svg class="i"><use href="#i-history"/></svg>History</button>
       <button data-tab="workout" id="tab-workout"><svg class="i"><use href="#i-bar"/></svg>Workout</button>
       <button data-tab="exercises" id="tab-exercises"><svg class="i"><use href="#i-library"/></svg>Exercises</button>
@@ -34,6 +41,7 @@
   <symbol id="i-check" viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></symbol>
   <symbol id="i-x" viewBox="0 0 24 24"><path d="M6 6l12 12M18 6L6 18"/></symbol>
   <symbol id="i-down" viewBox="0 0 24 24"><path d="M6 9l6 6 6-6"/></symbol>
+  <symbol id="i-up" viewBox="0 0 24 24"><path d="M6 15l6-6 6 6"/></symbol>
   <symbol id="i-back" viewBox="0 0 24 24"><path d="M15 6l-6 6 6 6"/></symbol>
   <symbol id="i-history" viewBox="0 0 24 24"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5M12 7v5l3 2"/></symbol>
   <!-- Library: two upright books and one leaning, on a shelf -->

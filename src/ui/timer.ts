@@ -1,5 +1,5 @@
 /* Workout clock and rest timer, both driven by one 1-second tick. */
-import { S } from '../state';
+import { S, exById } from '../state';
 import { $, $$, clock } from '../util';
 import { actions } from './actions';
 import { toast } from './shell';
@@ -44,9 +44,29 @@ function renderRest() {
   $('#restBar').style.width = (100 * left / (rest.total * 1000)) + '%';
 }
 
+/** "13s", "4m 12s", "1h 05m" for the compact workout pill. */
+function shortClock(ms: number) {
+  const s = Math.max(0, Math.floor(ms / 1000)), h = Math.floor(s / 3600), m = Math.floor(s % 3600 / 60);
+  if (h) return `${h}h ${String(m).padStart(2, '0')}m`;
+  return m ? `${m}m ${s % 60}s` : `${s}s`;
+}
+
+/** Second line of the minimized workout pill: the rest countdown, else the exercise you're on. */
+function pillSubtitle() {
+  const w = S.active.w!;
+  if (rest && rest.end > Date.now()) return `Rest ${clock(rest.end - Date.now() + 999)}`;
+  const current = w.items.find(it => it.sets.some(s => !s.done)) ?? w.items[w.items.length - 1];
+  return current ? exById(current.ex).name : 'No exercises yet';
+}
+
 export function tick() {
   const w = S.active.w;
-  if (w) { const t = clock(Date.now() - w.start); $$('[data-elapsed]').forEach(e => { e.textContent = t; }); }
+  if (w) {
+    const ms = Date.now() - w.start, t = clock(ms), short = shortClock(ms);
+    $$('[data-elapsed]').forEach(e => { e.textContent = t; });
+    $$('[data-elapsed-short]').forEach(e => { e.textContent = short; });
+    $('#resumeSub').textContent = pillSubtitle();
+  }
   renderRest();
 }
 setInterval(tick, 1000);
