@@ -292,3 +292,19 @@ textarea.text { padding: 10px 12px; min-height: 120px; font-family: ui-monospace
 .dsets .n.w { color: var(--gold); }
 .dsets .n.f { color: var(--warn); }
 .dsets .n.d { color: var(--accent); }
+
+/* Pull-to-refresh indicator: follows the finger down from the top, turns blue when far enough. */
+.ptr {
+  position: fixed; left: 50%; top: calc(env(safe-area-inset-top, 0px) - 36px); z-index: 25;
+  width: 40px; height: 40px; border-radius: 999px; display: grid; place-items: center;
+  background: var(--pill-bg); border: 1px solid var(--pill-line); box-shadow: var(--pill-shadow); color: var(--muted);
+  transform: translate(-50%, var(--pull, 0px)); opacity: 0; transition: opacity .15s, color .15s;
+  pointer-events: none;
+}
+.ptr.on { opacity: 1; }
+.ptr .i { width: 20px; height: 20px; transform: rotate(var(--turn, 0deg)); }
+.ptr.ready { color: var(--accent); }
+.ptr.loading .i { animation: ptr-spin .7s linear infinite; }
+@keyframes ptr-spin { to { transform: rotate(360deg); } }
+@media (prefers-reduced-motion: reduce) { .ptr.loading .i { animation: none; } }
+.buildinfo { margin-top: 18px; font-size: 13px; color: var(--muted); }

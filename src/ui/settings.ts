@@ -7,6 +7,7 @@ import { renderAll, renderView } from './app';
 import { renderLive } from './live';
 import { ask, closeSheet, openSheet, sheets, toast } from './shell';
 
+const buildLabel = () => new Date(__BUILD_TIME__).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 const restLabel = () => S.settings.rest ? clock(S.settings.rest * 1000) : 'Off';
 
 function openSettings() {
@@ -21,6 +22,7 @@ function openSettings() {
       <p class="muted small" style="margin:4px 0 8px">Copy your full log as text, or paste a backup to restore it.</p>
       <div class="row"><button class="btn plain sm" data-act="backup-copy">Copy backup</button><button class="btn plain sm" data-act="backup-load">Restore from text</button></div>
       <textarea class="text" id="backupText" placeholder="Paste a backup here, then tap Restore from text" style="margin-top:10px"></textarea>
+      <p class="buildinfo">Version built ${buildLabel()}. To get the newest version, pull down from the top of any tab.</p>
     </div></div>`);
 }
 

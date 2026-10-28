@@ -4,6 +4,7 @@ import { S } from './state';
 import { installDelegation } from './ui/actions';
 import { installTabs, renderAll, renderResume, renderView } from './ui/app';
 import { installLiveKeys } from './ui/live';
+import { installPullRefresh } from './ui/pullRefresh';
 import { handleIncomingLink } from './ui/share';
 import { wake } from './ui/wake';
 // Screens register their actions when imported.
@@ -17,6 +18,7 @@ import './ui/timer';
 installDelegation();
 installTabs();
 installLiveKeys();
+installPullRefresh();
 
 renderView();
 renderResume();
