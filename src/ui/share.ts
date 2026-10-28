@@ -1,9 +1,9 @@
 /* Share a template as a link, and open a shared link to preview and save the template. */
-import { decodeTemplate, encodeTemplate, shareLink, shareToken, type SharedTemplate } from '../share';
+import { decodeTemplate, encodeTemplate, findShareToken, shareLink, shareToken, type SharedTemplate } from '../share';
 import { S, touch, unit } from '../state';
 import type { Exercise } from '../types';
 import { $, esc, ic, uid } from '../util';
-import { actions } from './actions';
+import { actions, onInput } from './actions';
 import { renderView, setTab } from './app';
 import { closeSheet, openSheet, sheets, toast } from './shell';
 import { plansSummary } from './templates';
@@ -40,8 +40,36 @@ function selectLink() {
 
 let incoming: SharedTemplate | null = null;
 
-function openImport(t: SharedTemplate) {
+/** A home-screen web app keeps its own storage, so a link opened in the browser saves there instead. */
+const isStandalone = () => {
+  try { return (navigator as Navigator & { standalone?: boolean }).standalone === true || matchMedia('(display-mode: standalone)').matches; }
+  catch { return false; }
+};
+
+/* Links can't open a home-screen web app on iOS; they always open the browser.
+   Pasting the link into the app is the way in. */
+function openPasteSheet() {
+  openSheet(sheets.s3, `
+    <div class="sheet-head"><button class="iconbtn" data-act="close3" aria-label="Close">${ic('x')}</button><div class="mid"><b>Add from link</b></div><span style="width:44px"></span></div>
+    <div class="sheet-body"><div class="wrap">
+      <p class="muted" style="margin:0">Copy a template link someone sent you (long-press it in your messaging app and choose Copy), then paste it here.</p>
+      <div class="field"><label for="importLink">Template link</label>
+        <input class="text" id="importLink" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste link"></div>
+      <button class="btn primary block" data-act="import-paste">Show template</button>
+    </div></div>`);
+  setTimeout(() => $<HTMLInputElement>('#importLink')?.focus(), 300);
+}
+
+async function importFromText(text: string, quiet = false) {
+  const token = findShareToken(text);
+  if (!token) { if (!quiet) toast('That isn’t an Ironlog template link'); return; }
+  try { openImport(await decodeTemplate(token), token); }
+  catch { if (!quiet) toast('This template link is incomplete or damaged. Ask for a new one.'); }
+}
+
+function openImport(t: SharedTemplate, token: string) {
   incoming = t;
+  link = shareLink(token);
   const custom = t.items.filter(i => i.custom).length;
   openSheet(sheets.s3, `
     <div class="sheet-head"><button class="iconbtn" data-act="import-dismiss" aria-label="Close">${ic('x')}</button><div class="mid"><b>Shared template</b></div><span style="width:44px"></span></div>
@@ -57,6 +85,10 @@ function openImport(t: SharedTemplate) {
         <button class="btn primary block" data-act="import-save">Save template</button>
         <button class="btn plain block" data-act="import-dismiss">Not now</button>
       </div>
+      ${isStandalone() ? '' : `<div class="card" style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
+        <span class="small"><b>Use Ironlog from your home screen?</b> Links open in the browser, which keeps separate data. Copy this link, open Ironlog from your home screen, and tap <b>Add from link</b>.</span>
+        <button class="btn plain sm" data-act="share-copy" style="align-self:flex-start">Copy link</button>
+      </div>`}
     </div></div>`);
 }
 
@@ -101,9 +133,16 @@ export async function handleIncomingLink() {
   const token = shareToken(location.hash);
   if (!token) return;
   clearHash();
-  try { openImport(await decodeTemplate(token)); }
+  try { openImport(await decodeTemplate(token), token); }
   catch { toast('This template link is incomplete or damaged. Ask for a new one.'); }
 }
+
+// Pasting a link shows the template right away; the button covers typing it in.
+onInput(t => {
+  if (t.id !== 'importLink') return false;
+  if (findShareToken(t.value)) void importFromText(t.value, true);
+  return true;
+});
 
 window.addEventListener('hashchange', () => { void handleIncomingLink(); });
 
@@ -119,6 +158,8 @@ actions({
       if ((err as DOMException)?.name !== 'AbortError') { selectLink(); toast('Sharing is unavailable here. Copy the link instead.'); }
     });
   },
+  'import-link': () => openPasteSheet(),
+  'import-paste': () => { void importFromText($<HTMLInputElement>('#importLink').value); },
   'import-save': () => saveIncoming(),
   'import-dismiss': () => { incoming = null; closeSheet(sheets.s3); renderView(); },
 });

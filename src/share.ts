@@ -23,6 +23,9 @@ export const shareToken = (hash: string) => {
   return h.startsWith(PREFIX) ? h : null;
 };
 
+/** Find a share token in pasted text: a full link, a link inside a message, or the bare token. */
+export const findShareToken = (text: string) => text.match(/(?:^|[#\s])(tpl-[A-Za-z0-9_-]{4,})/)?.[1] ?? null;
+
 /* ---------- bytes ---------- */
 
 function toB64url(bytes: Uint8Array) {
