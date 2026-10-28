@@ -106,5 +106,5 @@ export async function decodeTemplate(token: string): Promise<SharedTemplate> {
     items.push({ ex, custom, sets });
   }
   if (!items.length) throw new Error('empty template');
-  return { name: str(w.n, LIMITS.name) || 'Shared template', unit: w.u === 'lb' ? 'lb' : 'kg', items, skipped };
+  return { name: str(w.n, LIMITS.name) || 'Shared routine', unit: w.u === 'lb' ? 'lb' : 'kg', items, skipped };
 }

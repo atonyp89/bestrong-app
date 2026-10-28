@@ -37,7 +37,7 @@ function openTemplate(id: string) {
   openSheet(sheets.s2, `
     <div class="sheet-head"><button class="iconbtn" data-act="close2" aria-label="Close">${ic('x')}</button><div class="mid"><b>${esc(t.name)}</b></div><button class="btn plain sm" data-act="tpl-edit" data-id="${t.id}">Edit</button></div>
     <div class="sheet-body"><div class="wrap">
-      ${t.sample ? '<div class="muted small">Example template. Edit it to add your weights, or delete it.</div>' : ''}
+      ${t.sample ? '<div class="muted small">Example routine. Edit it to add your weights, or delete it.</div>' : ''}
       <div>${t.items.map(i => {
         const planned = i.sets.some(s => s.w != null || s.r != null);
         let right = '';
@@ -47,7 +47,7 @@ function openTemplate(id: string) {
       }).join('')}</div>
       <div class="list">
         <button class="btn primary block" data-act="tpl-start" data-id="${t.id}">Start workout</button>
-        <button class="btn soft block" data-act="tpl-share" data-id="${t.id}">${ic('share')}Share template</button>
+        <button class="btn soft block" data-act="tpl-share" data-id="${t.id}">${ic('share')}Share routine</button>
       </div>
     </div></div>`);
 }
@@ -86,7 +86,7 @@ function renderTplEditor() {
   const body = sheets.s2.querySelector('.sheet-body');
   const scroll = body ? body.scrollTop : 0;
   sheets.s2.innerHTML = `
-    <div class="sheet-head"><button class="iconbtn" data-act="close2" aria-label="Close">${ic('x')}</button><div class="mid"><b>${isNew ? 'New template' : 'Edit template'}</b></div><button class="btn primary sm" data-act="tpl-save">Save</button></div>
+    <div class="sheet-head"><button class="iconbtn" data-act="close2" aria-label="Close">${ic('x')}</button><div class="mid"><b>${isNew ? 'New routine' : 'Edit routine'}</b></div><button class="btn primary sm" data-act="tpl-save">Save</button></div>
     <div class="sheet-body"><div class="wrap">
       <div class="field"><label for="tplName">Name</label><input class="text" id="tplName" value="${esc(d.name)}" placeholder="e.g. Upper A" autocomplete="off"></div>
       ${d.items.length ? '<p class="muted small" style="margin:0">Weights and reps are optional. Blank fields copy the set above, or use your last session.</p>' : ''}
@@ -98,7 +98,7 @@ function renderTplEditor() {
         <button class="addset" data-act="tpl-set-add" data-k="${k}">${ic('plus')} Add set</button>
       </div>`).join('') || '<div class="muted">No exercises yet.</div>'}
       <button class="btn soft block" data-act="tpl-add">${ic('plus')}Add exercises</button>
-      ${isNew ? '' : `<button class="btn danger block" data-act="tpl-del">${ic('trash')}Delete template</button>`}
+      ${isNew ? '' : `<button class="btn danger block" data-act="tpl-del">${ic('trash')}Delete routine</button>`}
     </div></div>`;
   sheets.s2.querySelector('.sheet-body')!.scrollTop = scroll;
 }
@@ -115,7 +115,7 @@ function rowOf(el: Element) {
 function saveTemplate() {
   const d = draft!;
   d.name = $<HTMLInputElement>('#tplName').value.trim();
-  if (!d.name) { $<HTMLInputElement>('#tplName').focus(); toast('Give the template a name'); return; }
+  if (!d.name) { $<HTMLInputElement>('#tplName').focus(); toast('Give the routine a name'); return; }
   if (!d.items.length) { toast('Add at least one exercise'); return; }
   delete d.sample;
   d.items = materialize(d.items);
@@ -125,7 +125,7 @@ function saveTemplate() {
   touch('templates');
   closeSheet(sheets.s2);
   renderView();
-  toast('Template saved');
+  toast('Routine saved');
 }
 
 /* ---------- Update after a workout ---------- */
@@ -164,9 +164,9 @@ export function templateUpdateCard(w: Workout) {
   if (!lines.length) return '';
   const shown = lines.slice(0, 6);
   return `<div class="card tplupd" id="tplUpd">
-    <b>Update “${esc(t.name)}” template?</b>
+    <b>Update “${esc(t.name)}” routine?</b>
     <ul>${shown.map(l => `<li>${esc(l)}</li>`).join('')}${lines.length > shown.length ? `<li>and ${lines.length - shown.length} more</li>` : ''}</ul>
-    <div class="row"><button class="btn primary sm" data-act="tpl-update" data-id="${w.id}">Update template</button><button class="btn plain sm" data-act="tpl-keep">Keep original</button></div>
+    <div class="row"><button class="btn primary sm" data-act="tpl-update" data-id="${w.id}">Update routine</button><button class="btn plain sm" data-act="tpl-keep">Keep original</button></div>
   </div>`;
 }
 
@@ -209,12 +209,12 @@ actions({
   'tpl-save': () => saveTemplate(),
   'tpl-del': () => {
     const d = draft!;
-    ask('Delete template?', `“${d.name}” will be removed. Logged workouts stay.`, 'Delete', () => {
+    ask('Delete routine?', `“${d.name}” will be removed. Logged workouts stay.`, 'Delete', () => {
       S.templates.list = S.templates.list.filter(x => x.id !== d.id);
       touch('templates');
       closeSheet(sheets.s2);
       renderView();
-      toast('Template deleted');
+      toast('Routine deleted');
     });
   },
   'tpl-update': el => {
@@ -227,7 +227,7 @@ actions({
     touch('templates');
     renderView();
     $('#tplUpd').outerHTML = `<div class="muted small">“${esc(t.name)}” now matches this workout.</div>`;
-    toast('Template updated');
+    toast('Routine updated');
   },
   'tpl-keep': () => $('#tplUpd')?.remove(),
 });

@@ -3,11 +3,12 @@
 A distraction-free, mobile-first workout tracker.
 
 - Log sets with weight, reps and the previous session's numbers, with a rest timer after each set
-- Templates (Push / Pull / Legs examples included), history with duration, volume and PRs
+- Routines with planned kg and reps per set (Push / Pull / Legs examples included), shareable as links
+- History with duration, volume and PRs
 - 60 built-in exercises with animated form demos and cues, plus custom exercises
 - kg / lb, light and dark themes
 
-Vanilla TypeScript with Vite. No UI framework: screens render HTML strings and controls use `data-act` attributes.
+Vanilla TypeScript with Vite. No UI framework: screens render HTML strings and controls use `data-act` attributes. In code, routines are called templates (`Template`, `src/ui/templates.ts`).
 
 ## Develop
 

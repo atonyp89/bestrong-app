@@ -54,7 +54,7 @@ function openHistory(id: string) {
       </div>`).join('')}
       <div class="list">
         <button class="btn primary block" data-act="hist-repeat" data-id="${w.id}">Repeat this workout</button>
-        <button class="btn soft block" data-act="hist-tpl" data-id="${w.id}">Save as template</button>
+        <button class="btn soft block" data-act="hist-tpl" data-id="${w.id}">Save as routine</button>
         <button class="btn danger block" data-act="hist-del" data-id="${w.id}">${ic('trash')}Delete workout</button>
       </div>
     </div></div>`);

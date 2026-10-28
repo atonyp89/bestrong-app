@@ -15,12 +15,12 @@ const canNativeShare = () => !window.claude && typeof navigator.share === 'funct
 async function openShare(id: string) {
   const t = S.templates.list.find(x => x.id === id);
   if (!t) return;
-  try { link = shareLink(await encodeTemplate(t, unit())); } catch { toast('Could not create a link for this template'); return; }
+  try { link = shareLink(await encodeTemplate(t, unit())); } catch { toast('Could not create a link for this routine'); return; }
   openSheet(sheets.s3, `
-    <div class="sheet-head"><button class="iconbtn" data-act="close3" aria-label="Close">${ic('x')}</button><div class="mid"><b>Share template</b></div><span style="width:44px"></span></div>
+    <div class="sheet-head"><button class="iconbtn" data-act="close3" aria-label="Close">${ic('x')}</button><div class="mid"><b>Share routine</b></div><span style="width:44px"></span></div>
     <div class="sheet-body"><div class="wrap">
       <div><h1>${esc(t.name)}</h1><div class="muted small">${t.items.length} exercise${t.items.length === 1 ? '' : 's'}, with planned weights and reps</div></div>
-      <p class="muted" style="margin:0">Send this link in any messaging app. Whoever opens it can preview the template and save a copy. The whole template is inside the link, so later edits on your side don't change their copy.</p>
+      <p class="muted" style="margin:0">Send this link in any messaging app. Whoever opens it can preview the routine and save a copy. The whole routine is inside the link, so later edits on your side don't change their copy.</p>
       <div class="field"><label for="shareLink">Link</label><input class="text" id="shareLink" readonly value="${esc(link)}"></div>
       <div class="list">
         <button class="btn primary block" data-act="share-copy">Copy link</button>
@@ -52,19 +52,19 @@ function openPasteSheet() {
   openSheet(sheets.s3, `
     <div class="sheet-head"><button class="iconbtn" data-act="close3" aria-label="Close">${ic('x')}</button><div class="mid"><b>Add from link</b></div><span style="width:44px"></span></div>
     <div class="sheet-body"><div class="wrap">
-      <p class="muted" style="margin:0">Copy a template link someone sent you (long-press it in your messaging app and choose Copy), then paste it here.</p>
-      <div class="field"><label for="importLink">Template link</label>
+      <p class="muted" style="margin:0">Copy a routine link someone sent you (long-press it in your messaging app and choose Copy), then paste it here.</p>
+      <div class="field"><label for="importLink">Routine link</label>
         <input class="text" id="importLink" type="url" inputmode="url" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Paste link"></div>
-      <button class="btn primary block" data-act="import-paste">Show template</button>
+      <button class="btn primary block" data-act="import-paste">Show routine</button>
     </div></div>`);
   setTimeout(() => $<HTMLInputElement>('#importLink')?.focus(), 300);
 }
 
 async function importFromText(text: string, quiet = false) {
   const token = findShareToken(text);
-  if (!token) { if (!quiet) toast('That isn’t an Ironlog template link'); return; }
+  if (!token) { if (!quiet) toast('That isn’t an Ironlog routine link'); return; }
   try { openImport(await decodeTemplate(token), token); }
-  catch { if (!quiet) toast('This template link is incomplete or damaged. Ask for a new one.'); }
+  catch { if (!quiet) toast('This routine link is incomplete or damaged. Ask for a new one.'); }
 }
 
 function openImport(t: SharedTemplate, token: string) {
@@ -72,7 +72,7 @@ function openImport(t: SharedTemplate, token: string) {
   link = shareLink(token);
   const custom = t.items.filter(i => i.custom).length;
   openSheet(sheets.s3, `
-    <div class="sheet-head"><button class="iconbtn" data-act="import-dismiss" aria-label="Close">${ic('x')}</button><div class="mid"><b>Shared template</b></div><span style="width:44px"></span></div>
+    <div class="sheet-head"><button class="iconbtn" data-act="import-dismiss" aria-label="Close">${ic('x')}</button><div class="mid"><b>Shared routine</b></div><span style="width:44px"></span></div>
     <div class="sheet-body"><div class="wrap">
       <div><span class="tag">Someone shared this with you</span><h1>${esc(t.name)}</h1></div>
       <div>${t.items.map(i => {
@@ -82,7 +82,7 @@ function openImport(t: SharedTemplate, token: string) {
       ${custom ? `<p class="muted small" style="margin:0">Saving also adds ${custom} custom exercise${custom === 1 ? '' : 's'} to your list.</p>` : ''}
       ${t.skipped ? `<p class="muted small" style="margin:0">${t.skipped} exercise${t.skipped === 1 ? '' : 's'} could not be read and ${t.skipped === 1 ? 'was' : 'were'} left out.</p>` : ''}
       <div class="list">
-        <button class="btn primary block" data-act="import-save">Save template</button>
+        <button class="btn primary block" data-act="import-save">Save routine</button>
         <button class="btn plain block" data-act="import-dismiss">Not now</button>
       </div>
       ${isStandalone() ? '' : `<div class="card" style="padding:12px 14px;display:flex;flex-direction:column;gap:8px">
@@ -121,7 +121,7 @@ function saveIncoming() {
   incoming = null;
   closeSheet(sheets.s3);
   setTab('workout');
-  toast(`Saved “${name}” to your templates`);
+  toast(`Saved “${name}” to your routines`);
 }
 
 /** Drop the token from the address so a reload doesn't offer the same template again. */
@@ -134,7 +134,7 @@ export async function handleIncomingLink() {
   if (!token) return;
   clearHash();
   try { openImport(await decodeTemplate(token), token); }
-  catch { toast('This template link is incomplete or damaged. Ask for a new one.'); }
+  catch { toast('This routine link is incomplete or damaged. Ask for a new one.'); }
 }
 
 // Pasting a link shows the template right away; the button covers typing it in.
@@ -154,7 +154,7 @@ actions({
       .catch(() => { selectLink(); toast('Select the link and copy it'); });
   },
   'share-native': () => {
-    navigator.share({ title: 'Ironlog template', url: link }).catch(err => {
+    navigator.share({ title: 'Ironlog routine', url: link }).catch(err => {
       if ((err as DOMException)?.name !== 'AbortError') { selectLink(); toast('Sharing is unavailable here. Copy the link instead.'); }
     });
   },
