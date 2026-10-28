@@ -1,5 +1,5 @@
 import { Cloud } from '../cloud';
-import { S, touch, unit } from '../state';
+import { S, normalizeTemplates, touch, unit } from '../state';
 import type { State, Unit, Workout } from '../types';
 import { $, clock, ic } from '../util';
 import { actions } from './actions';
@@ -29,7 +29,7 @@ interface Backup { ironlog: 1; settings: State['settings']; custom: State['custo
 function restore(d: Backup) {
   S.settings = d.settings;
   S.custom = d.custom;
-  S.templates = d.templates;
+  S.templates = { ...d.templates, list: normalizeTemplates(d.templates.list) };
   S.deleted.push(...S.workouts.filter(o => !d.workouts.some(x => x.id === o.id)).map(o => 'w-' + o.id));
   S.workouts = d.workouts;
   touch('settings'); touch('custom'); touch('templates');

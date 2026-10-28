@@ -1,6 +1,6 @@
 /* Per-person, private sync through the artifact `db` capability. Each section and each finished
    workout is one document under data/users/<id>/, stored as JSON with a last-modified time. */
-import { S, isWorkoutKey, persistLocal, setSyncHook } from './state';
+import { S, isWorkoutKey, normalizeTemplates, persistLocal, setSyncHook } from './state';
 import type { DocKey, SectionKey, State } from './types';
 
 interface DocSnap { id: string; data(): Record<string, unknown> | undefined }
@@ -50,6 +50,7 @@ export const Cloud = {
         try { const w = JSON.parse(r.json); w.updatedAt = r.t; if (l) Object.assign(l, w); else S.workouts.push(w); } catch { /* bad doc */ }
       }
     }
+    S.templates.list = normalizeTemplates(S.templates.list);
     for (const [id, l] of local) { const r = remote.get(id); if (!r || (l.updatedAt || 0) > r.t) this.dirty.add(id as DocKey); }
     for (const id of S.deleted) this.dirty.add(id as DocKey);
     S.workouts.sort((a, b) => b.start - a.start);

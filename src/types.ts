@@ -13,6 +13,9 @@ export interface SetEntry {
   done: boolean;
   /** '' for a working set, 'w' for a warm-up. */
   type: '' | 'w';
+  /** Template targets in the workout's unit, shown as placeholders. */
+  tw?: number | null;
+  tr?: number | null;
 }
 
 export interface WorkoutItem {
@@ -29,17 +32,28 @@ export interface Workout {
   unit: Unit;
   items: WorkoutItem[];
   updatedAt: number;
+  /** Template this workout was started from, for the update offer on finish. */
+  templateId?: string;
+}
+
+/** A planned set. Blank weight or reps follow the lifter's history instead. */
+export interface TemplateSet {
+  w: number | null;
+  r: number | null;
+  type: '' | 'w';
 }
 
 export interface TemplateItem {
   ex: string;
-  sets: number;
+  sets: TemplateSet[];
 }
 
 export interface Template {
   id: string;
   name: string;
   items: TemplateItem[];
+  /** Unit the planned weights are stored in. */
+  unit?: Unit;
   sample?: boolean;
   updatedAt?: number;
 }

@@ -74,7 +74,8 @@ actions({
     const h = byId(el.dataset.id);
     if (!h) return;
     closeSheet(sheets.s2);
-    setTimeout(() => openTplEditor({ id: 't-' + uid(), name: h.name, items: h.items.map(i => ({ ex: i.ex, sets: i.sets.length })) }), 200);
+    const items = h.items.map(i => ({ ex: i.ex, sets: i.sets.map(s => ({ w: s.w, r: s.r, type: s.type })) }));
+    setTimeout(() => openTplEditor({ id: 't-' + uid(), name: h.name, items, unit: h.unit }), 200);
   },
   'hist-del': el => {
     const id = el.dataset.id!;

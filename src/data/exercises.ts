@@ -32,5 +32,6 @@ export const SAMPLE_TEMPLATES: Template[] = ([
   ['t-pull', 'Pull', [['deadlift', 3], ['pull-up', 3], ['bent-over-row', 3], ['face-pull', 3], ['dumbbell-curl', 3]]],
   ['t-legs', 'Legs', [['squat', 4], ['romanian-deadlift', 3], ['leg-press', 3], ['lying-leg-curl', 3], ['standing-calf-raise', 4]]],
 ] as [string, string, [string, number][]][]).map(([id, name, items]) => ({
-  id, name, sample: true, updatedAt: 0, items: items.map(([ex, sets]) => ({ ex, sets })),
+  id, name, sample: true, updatedAt: 0,
+  items: items.map(([ex, n]) => ({ ex, sets: Array.from({ length: n }, () => ({ w: null, r: null, type: '' as const })) })),
 }));

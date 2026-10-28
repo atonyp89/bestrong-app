@@ -1,17 +1,23 @@
 /* The in-progress workout sheet: set table, exercise reordering, finishing and cancelling. */
-import { S, conv, exById, touch, unit } from '../state';
+import { S, conv, convTo, exById, touch, unit } from '../state';
 import { lastPerformance, prsFor, volume, workSets } from '../stats';
-import type { SetEntry, Workout, WorkoutItem } from '../types';
+import type { SetEntry, TemplateItem, Unit, Workout, WorkoutItem } from '../types';
 import { $, $$, dateLabel, defaultName, dur, esc, fmtNum, ic, toNum, uid } from '../util';
 import { actions, onInput } from './actions';
 import { renderResume, renderView, setTab } from './app';
 import { openPicker } from './picker';
 import { ask, closeSheet, openSheet, sheets, toast } from './shell';
+import { templateUpdateCard } from './templates';
 import { startRest, stopRest, tick } from './timer';
 import { wake } from './wake';
 
-export function newWorkout(name: string, items: WorkoutItem[]): Workout {
-  return { id: uid(), name: name || defaultName(), start: Date.now(), end: null, unit: unit(), items, updatedAt: Date.now() };
+export function newWorkout(name: string, items: WorkoutItem[], templateId?: string): Workout {
+  return { id: uid(), name: name || defaultName(), start: Date.now(), end: null, unit: unit(), items, updatedAt: Date.now(), templateId };
+}
+
+/** An exercise entry planned by a template; its targets become the sets' placeholders. */
+export function itemFromTemplate(ti: TemplateItem, tplUnit: Unit = unit()): WorkoutItem {
+  return { ex: ti.ex, sets: ti.sets.map(ts => ({ w: null, r: null, done: false, type: ts.type, tw: convTo(ts.w, tplUnit, unit()), tr: ts.r })) };
 }
 
 /** A fresh exercise entry, sized from last time unless `count` is given. */
@@ -58,20 +64,28 @@ export function renderLive() {
 
 type Ghost = { w: string; r: string };
 
-/** Grey placeholder values per set. Blank fields copy the nearest set above of the same kind
-    (working or warm-up), so entering set 1 pre-fills the rest; otherwise last session's set. */
+/** The value this set should default to for one field, in priority order:
+    1. the set's template target, unless the lifter changed a set above away from its target;
+    2. the nearest entered value above, of the same kind (working or warm-up);
+    3. the same set last session. */
+function ghostField(it: WorkoutItem, si: number, f: 'w' | 'r', prev: number | null): number | null {
+  const s = it.sets[si], target = f === 'w' ? s.tw : s.tr;
+  for (let j = si - 1; j >= 0; j--) {
+    const a = it.sets[j];
+    if (a.type !== s.type || a[f] == null) continue;
+    const aTarget = f === 'w' ? a.tw : a.tr;
+    const deviated = aTarget != null && Math.abs(a[f]! - aTarget) > 0.001;
+    return target != null && !deviated ? target : a[f];
+  }
+  return target ?? prev;
+}
+
+/** Grey placeholder values per set, so blank sets can be ticked without typing. */
 function ghosts(it: WorkoutItem, last: ReturnType<typeof lastPerformance>): Ghost[] {
-  return it.sets.map((s, si) => {
-    let w: number | null = null, r: number | null = null;
-    for (let j = si - 1; j >= 0 && (w == null || r == null); j--) {
-      const above = it.sets[j];
-      if (above.type !== s.type) continue;
-      w ??= above.w;
-      r ??= above.r;
-    }
+  return it.sets.map((_, si) => {
     const p = last?.sets[si];
-    w ??= p && last ? conv(p.w, last.w.unit) : null;
-    r ??= p?.r ?? null;
+    const w = ghostField(it, si, 'w', p && last ? conv(p.w, last.w.unit) : null);
+    const r = ghostField(it, si, 'r', p?.r ?? null);
     return { w: w != null ? fmtNum(w) : '', r: r != null ? String(r) : '' };
   });
 }
@@ -168,6 +182,7 @@ function showSummary(w: Workout) {
       <h1>${esc(w.name)}</h1>
       <div class="big"><div><b>${dur(w.end! - w.start)}</b><span>Time</span></div><div><b>${fmtNum(volume(w))}</b><span>Volume ${unit()}</span></div><div><b>${w.items.reduce((a, i) => a + workSets(i).length, 0)}</b><span>Sets</span></div></div>
       ${prs.length ? `<div class="card" style="padding:14px"><span class="pr" style="font-size:14px">${ic('trophy')}New personal records</span><div style="margin-top:6px">${prs.map(id => esc(exById(id).name)).join('<br>')}</div></div>` : ''}
+      ${templateUpdateCard(w)}
       <button class="btn primary block" data-act="close2">Done</button>
     </div></div>`);
 }
@@ -227,7 +242,7 @@ function moveItem(i: number, d: number) {
 
 onInput(t => {
   if (t.id === 'wname' && S.active.w) { S.active.w.name = t.value; touch('active'); return true; }
-  if (!t.classList.contains('cell')) return false;
+  if (!t.classList.contains('cell') || !t.closest('#live')) return false;
   const r = rowRef(t);
   if (!r) return true;
   const n = toNum(t.value);
@@ -246,7 +261,7 @@ export function installLiveKeys() {
     ev.preventDefault();
     const tr = t.closest('tr')!;
     if (t.dataset.f === 'w') cells(tr).r.focus();
-    else { t.blur(); $('[data-act="set-done"]', tr).click(); }
+    else { t.blur(); $('[data-act="set-done"]', tr)?.click(); }
   });
   // Select field contents on focus so typing replaces the value.
   document.addEventListener('focusin', ev => {

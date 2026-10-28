@@ -244,3 +244,9 @@ textarea.text { padding: 10px 12px; min-height: 120px; font-family: ui-monospace
 .sync { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: var(--muted); }
 .sync i { width: 8px; height: 8px; border-radius: 99px; background: var(--muted); }
 .sync.ok i { background: var(--done); }
+
+/* "Update template?" offer on the finish summary */
+.tplupd { padding: 14px; display: flex; flex-direction: column; gap: 10px; border-color: var(--accent); }
+.tplupd b { font-family: var(--f-display); font-size: 20px; font-weight: 600; }
+.tplupd ul { margin: 0; padding-left: 18px; display: flex; flex-direction: column; gap: 4px; font-size: 14px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tplupd .row { flex-wrap: wrap; }
