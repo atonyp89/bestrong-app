@@ -1,0 +1,18 @@
+{
+  "name": "bestrong-app",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "description": "Ironlog: a distraction-free, mobile-first workout tracker.",
+  "scripts": {
+    "dev": "vite",
+    "typecheck": "tsc --noEmit",
+    "build": "tsc --noEmit && vite build && node scripts/artifact.mjs",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "typescript": "~5.6",
+    "vite": "~5.4",
+    "vite-plugin-singlefile": "~2.0"
+  }
+}
