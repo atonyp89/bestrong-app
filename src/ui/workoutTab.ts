@@ -15,11 +15,14 @@ export function viewWorkout() {
       <button class="btn plain sm" data-act="import-link">Add from link</button>
       <button class="btn soft sm" data-act="tpl-new">${ic('plus')}Routine</button></div></div>
     ${tpls.length ? `<div class="tplgrid">${tpls.map(t => `
-      <button class="card tpl" data-act="tpl-open" data-id="${t.id}">
-        ${t.sample ? '<span class="tag">Example</span>' : ''}
-        <b>${esc(t.name)}</b>
-        <span class="lines">${t.items.map(i => esc(exById(i.ex).name)).join(', ')}</span>
-      </button>`).join('')}</div>`
+      <div class="card tpl">
+        <button class="open" data-act="tpl-open" data-id="${t.id}" aria-label="${esc(t.name)}: view, edit or share">
+          ${t.sample ? '<span class="tag">Example</span>' : ''}
+          <b>${esc(t.name)}</b>
+          <span class="lines">${t.items.map(i => esc(exById(i.ex).name)).join(', ')}</span>
+        </button>
+        <button class="btn primary block" data-act="tpl-start" data-id="${t.id}">Start routine</button>
+      </div>`).join('')}</div>`
       : `<div class="card empty"><b>No routines yet</b>Save a workout you repeat, or turn a finished workout into one from History.</div>`}
   </div>`;
 }
