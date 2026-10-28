@@ -1,5 +1,6 @@
 import { S, exById, persistLocal, unit } from '../state';
 import { Cloud } from '../cloud';
+import { setGlyphs } from '../sets';
 import { bestSet, finished, prsFor, setLabel, setRm, volume } from '../stats';
 import type { Workout } from '../types';
 import { dateLabel, dur, esc, fmtNum, ic, uid } from '../util';
@@ -47,10 +48,10 @@ function openHistory(id: string) {
       <div class="big"><div><b>${dur(w.end! - w.start)}</b><span>Time</span></div><div><b>${fmtNum(volume(w))}</b><span>Volume ${unit()}</span></div><div><b>${prs.length}</b><span>PRs</span></div></div>
       ${w.items.filter(i => i.sets.some(s => s.done)).map(it => `<div class="exblock">
         <div class="row between"><b>${esc(exById(it.ex).name)}</b>${prs.includes(it.ex) ? `<span class="pr">${ic('trophy')}PR</span>` : ''}</div>
-        <div class="dsets">${it.sets.filter(s => s.done).map((s, i) => {
+        <div class="dsets">${(done => { const glyphs = setGlyphs(done); return done.map((s, i) => {
           const rm = setRm(s, w.unit);
-          return `<span class="n">${s.type === 'w' ? 'W' : i + 1}</span><span>${setLabel(s, w.unit)}</span><span class="muted small">${rm ? '1RM ' + fmtNum(rm) : ''}</span>`;
-        }).join('')}</div>
+          return `<span class="n ${s.type}">${glyphs[i]}</span><span>${setLabel(s, w.unit)}</span><span class="muted small">${rm ? '1RM ' + fmtNum(rm) : ''}</span>`;
+        }).join(''); })(it.sets.filter(s => s.done))}</div>
       </div>`).join('')}
       <div class="list">
         <button class="btn primary block" data-act="hist-repeat" data-id="${w.id}">Repeat this workout</button>

@@ -1,5 +1,8 @@
 export type Unit = 'kg' | 'lb';
 
+/** '' normal, 'w' warm-up, 'f' to failure, 'd' drop set. */
+export type SetType = '' | 'w' | 'f' | 'd';
+
 export interface Exercise {
   id: string;
   name: string;
@@ -11,8 +14,7 @@ export interface SetEntry {
   w: number | null;
   r: number | null;
   done: boolean;
-  /** '' for a working set, 'w' for a warm-up. */
-  type: '' | 'w';
+  type: SetType;
   /** Template targets in the workout's unit, shown as placeholders. */
   tw?: number | null;
   tr?: number | null;
@@ -40,7 +42,7 @@ export interface Workout {
 export interface TemplateSet {
   w: number | null;
   r: number | null;
-  type: '' | 'w';
+  type: SetType;
 }
 
 export interface TemplateItem {

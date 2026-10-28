@@ -1,5 +1,5 @@
 /* Templates: preview, editor with planned sets, and the "update template?" offer after a workout. */
-import { fromAbove, materialize } from '../sets';
+import { fromAbove, materialize, setGlyphs, typeName } from '../sets';
 import { S, convTo, exById, touch, unit } from '../state';
 import { bestSet, lastPerformance, setLabel } from '../stats';
 import type { Template, TemplateItem, TemplateSet, Unit, Workout } from '../types';
@@ -8,6 +8,7 @@ import { actions, onInput } from './actions';
 import { renderView } from './app';
 import { itemFromTemplate, newWorkout, startWorkout } from './live';
 import { openPicker } from './picker';
+import { pickSetType } from './setType';
 import { ask, closeSheet, openSheet, sheets, toast } from './shell';
 
 const MAX_SETS = 20;
@@ -67,12 +68,11 @@ export function openTplEditor(t: Template | null) {
 }
 
 function setRows(it: TemplateItem, k: number) {
-  let n = 0;
+  const glyphs = setGlyphs(it.sets);
   return it.sets.map((s, j) => {
-    if (s.type !== 'w') n++;
     const g = fromAbove(it.sets, j);
     return `<tr data-k="${k}" data-j="${j}">
-      <td><button class="setno ${s.type === 'w' ? 'w' : ''}" data-act="tpl-set-type" aria-label="Toggle warm-up set">${s.type === 'w' ? 'W' : n}</button></td>
+      <td><button class="setno ${s.type}" data-act="tpl-set-type" aria-label="Set type: ${typeName(s.type)}. Change">${glyphs[j]}</button></td>
       <td><input class="cell tcell" inputmode="decimal" enterkeyhint="next" data-f="w" value="${s.w ?? ''}" placeholder="${g.w != null ? fmtNum(g.w) : ''}" aria-label="Planned weight"></td>
       <td><input class="cell tcell" inputmode="numeric" enterkeyhint="done" data-f="r" value="${s.r ?? ''}" placeholder="${g.r ?? ''}" aria-label="Planned reps"></td>
       <td><button class="del" data-act="tpl-set-del" aria-label="Remove set">${ic('x')}</button></td>
@@ -197,7 +197,11 @@ actions({
     it.sets.splice(j, 1);
     renderTplEditor();
   },
-  'tpl-set-type': el => { keepName(); const { it, j } = rowOf(el); it.sets[j].type = it.sets[j].type === 'w' ? '' : 'w'; renderTplEditor(); },
+  'tpl-set-type': el => {
+    keepName();
+    const { it, j } = rowOf(el);
+    pickSetType(it.sets[j].type, t => { it.sets[j].type = t; renderTplEditor(); });
+  },
   'tpl-add': () => {
     keepName();
     openPicker(ids => {

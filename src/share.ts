@@ -5,11 +5,14 @@
 import { ARTIFACT_URL } from './config';
 import { LIB } from './data/exercises';
 import { exById } from './state';
-import type { Exercise, Template, TemplateSet, Unit } from './types';
+import type { Exercise, SetType, Template, TemplateSet, Unit } from './types';
 
 /** Wire format, version 1. Built-in exercises travel by id; custom ones carry their definition. */
 type WireEx = string | [name: string, part: string, equip: string];
-type WireSet = [w: number | null, r: number | null, warmup?: 1];
+/** Third element is the set type: 1 warm-up, 2 failure, 3 drop; omitted for normal sets. */
+type WireSet = [w: number | null, r: number | null, type?: 1 | 2 | 3];
+const TYPE_CODE: Record<SetType, 1 | 2 | 3 | undefined> = { '': undefined, w: 1, f: 2, d: 3 };
+const CODE_TYPE: Record<number, SetType> = { 1: 'w', 2: 'f', 3: 'd' };
 interface Wire { v: 1; n: string; u: Unit; i: [WireEx, WireSet[]][] }
 
 export interface SharedItem { ex: Exercise; custom: boolean; sets: TemplateSet[] }
@@ -52,7 +55,7 @@ export async function encodeTemplate(t: Template, unit: Unit): Promise<string> {
     i: t.items.map(it => {
       const e = exById(it.ex);
       const ex: WireEx = it.ex.startsWith('c-') ? [e.name, e.part, e.equip] : it.ex;
-      return [ex, it.sets.map(s => (s.type === 'w' ? [s.w, s.r, 1] : [s.w, s.r]) as WireSet)];
+      return [ex, it.sets.map(s => { const c = TYPE_CODE[s.type]; return (c ? [s.w, s.r, c] : [s.w, s.r]) as WireSet; })];
     }),
   };
   const json = new TextEncoder().encode(JSON.stringify(wire));
@@ -99,7 +102,7 @@ export async function decodeTemplate(token: string): Promise<SharedTemplate> {
       custom = true;
     }
     const sets: TemplateSet[] = rawSets.slice(0, LIMITS.sets).filter(Array.isArray).map(s => ({
-      w: num(s[0], LIMITS.weight), r: num(s[1], LIMITS.reps, true), type: s[2] === 1 ? 'w' : '',
+      w: num(s[0], LIMITS.weight), r: num(s[1], LIMITS.reps, true), type: CODE_TYPE[s[2] as number] ?? '',
     }));
     // Unknown ids come from a newer app version; leave them out rather than fail the whole link.
     if (!ex || !sets.length) { skipped++; continue; }

@@ -1,11 +1,13 @@
 /* The in-progress workout sheet: set table, exercise reordering, finishing and cancelling. */
 import { S, conv, convTo, exById, touch, unit } from '../state';
+import { carryGroup, setGlyphs, typeName } from '../sets';
 import { lastPerformance, prsFor, volume, workSets } from '../stats';
 import type { SetEntry, TemplateItem, Unit, Workout, WorkoutItem } from '../types';
 import { $, $$, dateLabel, defaultName, dur, esc, fmtNum, ic, toNum, uid } from '../util';
 import { actions, onInput } from './actions';
 import { renderResume, renderView, setTab } from './app';
 import { openPicker } from './picker';
+import { pickSetType } from './setType';
 import { ask, closeSheet, openSheet, sheets, toast } from './shell';
 import { templateUpdateCard } from './templates';
 import { startRest, stopRest, tick } from './timer';
@@ -24,7 +26,7 @@ export function itemFromTemplate(ti: TemplateItem, tplUnit: Unit = unit()): Work
 export function itemFor(exId: string, count?: number): WorkoutItem {
   const last = lastPerformance(exId);
   const n = count || (last ? last.sets.length : 3);
-  return { ex: exId, sets: Array.from({ length: n }, (_, i) => ({ w: null, r: null, done: false, type: last?.sets[i]?.type === 'w' ? 'w' : '' })) };
+  return { ex: exId, sets: Array.from({ length: n }, (_, i) => ({ w: null, r: null, done: false, type: last?.sets[i]?.type ?? '' })) };
 }
 
 export function startWorkout(w: Workout) {
@@ -72,7 +74,7 @@ function ghostField(it: WorkoutItem, si: number, f: 'w' | 'r', prev: number | nu
   const s = it.sets[si], target = f === 'w' ? s.tw : s.tr;
   for (let j = si - 1; j >= 0; j--) {
     const a = it.sets[j];
-    if (a.type !== s.type || a[f] == null) continue;
+    if (carryGroup(a.type) !== carryGroup(s.type) || a[f] == null) continue;
     const aTarget = f === 'w' ? a.tw : a.tr;
     const deviated = aTarget != null && Math.abs(a[f]! - aTarget) > 0.001;
     return target != null && !deviated ? target : a[f];
@@ -103,14 +105,12 @@ function refreshGhosts(tr: HTMLTableRowElement, it: WorkoutItem) {
 function exBlock(it: WorkoutItem, ii: number, w: Workout) {
   const e = exById(it.ex);
   const last = lastPerformance(it.ex, w.start);
-  const g = ghosts(it, last);
-  let n = 0;
+  const g = ghosts(it, last), glyphs = setGlyphs(it.sets);
   const rows = it.sets.map((s, si) => {
-    if (s.type !== 'w') n++;
     const p = last?.sets[si];
     const pw = p && last ? conv(p.w, last.w.unit) : null;
     return `<tr class="${s.done ? 'done' : ''}" data-ii="${ii}" data-si="${si}">
-      <td><button class="setno ${s.type === 'w' ? 'w' : ''}" data-act="set-type" aria-label="Toggle warm-up set">${s.type === 'w' ? 'W' : n}</button></td>
+      <td><button class="setno ${s.type}" data-act="set-type" aria-label="Set type: ${typeName(s.type)}. Change">${glyphs[si]}</button></td>
       <td class="prev">${p ? `<button data-act="set-fill" data-w="${pw ?? ''}" data-r="${p.r ?? ''}">${pw ? fmtNum(pw) + ' × ' : ''}${p.r || 0}</button>` : '<span>–</span>'}</td>
       <td><input class="cell" inputmode="decimal" enterkeyhint="next" data-f="w" value="${s.w ?? ''}" placeholder="${g[si].w}" aria-label="Weight"></td>
       <td><input class="cell" inputmode="numeric" enterkeyhint="done" data-f="r" value="${s.r ?? ''}" placeholder="${g[si].r}" aria-label="Reps"></td>
@@ -206,7 +206,7 @@ actions({
     changed();
   },
   'set-del': el => { const r = rowRef(el); if (r) { r.it.sets.splice(r.si, 1); changed(); } },
-  'set-type': el => { const r = rowRef(el); if (r) { r.s.type = r.s.type === 'w' ? '' : 'w'; changed(); } },
+  'set-type': el => { const r = rowRef(el); if (r) pickSetType(r.s.type, t => { r.s.type = t; changed(); }); },
   'set-fill': el => {
     const r = rowRef(el);
     if (!r) return;
@@ -226,7 +226,8 @@ actions({
       if (r.s.r == null && c.r.placeholder) r.s.r = toNum(c.r.placeholder);
       if (!r.s.r) { c.r.focus(); toast('Enter reps first'); return; }
       r.s.done = true;
-      if (S.settings.rest && r.s.type !== 'w') startRest(S.settings.rest);
+      // Warm-ups need no rest, and a drop set follows straight on.
+      if (S.settings.rest && r.s.type !== 'w' && r.s.type !== 'd') startRest(S.settings.rest);
       try { navigator.vibrate?.(15); } catch { /* unsupported */ }
     } else r.s.done = false;
     changed();
