@@ -2,7 +2,7 @@
 import { S, conv, exById, touch, unit } from '../state';
 import { lastPerformance, prsFor, volume, workSets } from '../stats';
 import type { SetEntry, Workout, WorkoutItem } from '../types';
-import { $, dateLabel, defaultName, dur, esc, fmtNum, ic, toNum, uid } from '../util';
+import { $, $$, dateLabel, defaultName, dur, esc, fmtNum, ic, toNum, uid } from '../util';
 import { actions, onInput } from './actions';
 import { renderResume, renderView, setTab } from './app';
 import { openPicker } from './picker';
@@ -56,9 +56,40 @@ export function renderLive() {
   tick();
 }
 
+type Ghost = { w: string; r: string };
+
+/** Grey placeholder values per set. Blank fields copy the nearest set above of the same kind
+    (working or warm-up), so entering set 1 pre-fills the rest; otherwise last session's set. */
+function ghosts(it: WorkoutItem, last: ReturnType<typeof lastPerformance>): Ghost[] {
+  return it.sets.map((s, si) => {
+    let w: number | null = null, r: number | null = null;
+    for (let j = si - 1; j >= 0 && (w == null || r == null); j--) {
+      const above = it.sets[j];
+      if (above.type !== s.type) continue;
+      w ??= above.w;
+      r ??= above.r;
+    }
+    const p = last?.sets[si];
+    w ??= p && last ? conv(p.w, last.w.unit) : null;
+    r ??= p?.r ?? null;
+    return { w: w != null ? fmtNum(w) : '', r: r != null ? String(r) : '' };
+  });
+}
+
+/** Refresh placeholders in place while typing, so focus and the keyboard stay put. */
+function refreshGhosts(tr: HTMLTableRowElement, it: WorkoutItem) {
+  const g = ghosts(it, lastPerformance(it.ex, S.active.w!.start));
+  $$<HTMLTableRowElement>('tr[data-si]', tr.closest('tbody')!).forEach(row => {
+    const c = cells(row), gi = g[Number(row.dataset.si)];
+    c.w.placeholder = gi.w;
+    c.r.placeholder = gi.r;
+  });
+}
+
 function exBlock(it: WorkoutItem, ii: number, w: Workout) {
   const e = exById(it.ex);
   const last = lastPerformance(it.ex, w.start);
+  const g = ghosts(it, last);
   let n = 0;
   const rows = it.sets.map((s, si) => {
     if (s.type !== 'w') n++;
@@ -66,9 +97,9 @@ function exBlock(it: WorkoutItem, ii: number, w: Workout) {
     const pw = p && last ? conv(p.w, last.w.unit) : null;
     return `<tr class="${s.done ? 'done' : ''}" data-ii="${ii}" data-si="${si}">
       <td><button class="setno ${s.type === 'w' ? 'w' : ''}" data-act="set-type" aria-label="Toggle warm-up set">${s.type === 'w' ? 'W' : n}</button></td>
-      <td class="prev">${p ? `<button data-act="set-fill">${pw ? fmtNum(pw) + ' × ' : ''}${p.r || 0}</button>` : '<span>–</span>'}</td>
-      <td><input class="cell" inputmode="decimal" enterkeyhint="next" data-f="w" value="${s.w ?? ''}" placeholder="${pw != null ? fmtNum(pw) : ''}" aria-label="Weight"></td>
-      <td><input class="cell" inputmode="numeric" enterkeyhint="done" data-f="r" value="${s.r ?? ''}" placeholder="${p?.r ?? ''}" aria-label="Reps"></td>
+      <td class="prev">${p ? `<button data-act="set-fill" data-w="${pw ?? ''}" data-r="${p.r ?? ''}">${pw ? fmtNum(pw) + ' × ' : ''}${p.r || 0}</button>` : '<span>–</span>'}</td>
+      <td><input class="cell" inputmode="decimal" enterkeyhint="next" data-f="w" value="${s.w ?? ''}" placeholder="${g[si].w}" aria-label="Weight"></td>
+      <td><input class="cell" inputmode="numeric" enterkeyhint="done" data-f="r" value="${s.r ?? ''}" placeholder="${g[si].r}" aria-label="Reps"></td>
       <td><button class="chk" data-act="set-done" aria-label="Complete set">${ic('check')}</button></td>
       <td><button class="del" data-act="set-del" aria-label="Remove set">${ic('x')}</button></td>
     </tr>`;
@@ -164,12 +195,11 @@ actions({
   'set-fill': el => {
     const r = rowRef(el);
     if (!r) return;
-    const c = cells(r.tr);
-    r.s.w = toNum(c.w.placeholder);
-    r.s.r = toNum(c.r.placeholder);
-    c.w.value = String(r.s.w ?? '');
-    c.r.value = String(r.s.r ?? '');
+    // Copies last session's set; the button carries its values because placeholders may differ.
+    r.s.w = toNum(el.dataset.w);
+    r.s.r = toNum(el.dataset.r);
     touch('active');
+    renderLive();
   },
   'set-done': el => {
     const r = rowRef(el);
@@ -204,6 +234,7 @@ onInput(t => {
   if (t.dataset.f === 'r') r.s.r = n != null ? Math.round(n) : null;
   else r.s.w = n;
   touch('active');
+  refreshGhosts(r.tr, r.it);
   return true;
 });
 
