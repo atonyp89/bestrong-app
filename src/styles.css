@@ -5,21 +5,24 @@ img { max-width: 100%; }
 [hidden] { display: none !important; }
 
 /* Layout: one-screen app shell — scrolling main view, bottom tab bar, full-screen sheets for the live workout and pickers. */
+/* Palette: pure black ground, charcoal cards, bright sky-blue accent, slate-blue soft fill,
+   signal yellow for records. Light mode keeps the same hues, deepened for contrast on white. */
 :root {
-  --bg: #f3f4f7;
-  --surface: #ffffff;
-  --surface-2: #e8eaf0;
-  --line: #d9dce5;
-  --fg: #151821;
-  --muted: #6a7083;
-  --accent: #2f5bea;
+  --bg: #ffffff;
+  --surface: #f2f2f2;
+  --surface-2: #e5e5e5;
+  --line: #e0e0e0;
+  --fg: #000000;
+  --muted: #6e6e73;
+  --accent: #0077c8;
   --accent-ink: #ffffff;
-  --accent-soft: #e2e9ff;
+  --accent-soft: #e0eefa;
+  --accent-soft-ink: #005a9c;
   --done: #1f9d5c;
   --done-soft: #dcf3e6;
   --warn: #c7472c;
   --warn-soft: #fbe5df;
-  --gold: #b98200;
+  --gold: #806600;
   --f-display: "Barlow Condensed", "Arial Narrow", system-ui, sans-serif;
   --f-body: "Barlow", system-ui, -apple-system, "Segoe UI", sans-serif;
   --r: 12px;
@@ -27,16 +30,16 @@ img { max-width: 100%; }
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
-    --bg: #0f1116; --surface: #181b23; --surface-2: #222632; --line: #2c313e;
-    --fg: #eceef4; --muted: #8b91a3; --accent: #6d8dff; --accent-ink: #0b0e18; --accent-soft: #1f2846;
-    --done: #3ccf86; --done-soft: #15301f; --warn: #ff7a5c; --warn-soft: #3a1d17; --gold: #f0bf45;
+    --bg: #000000; --surface: #1c1c1c; --surface-2: #2c2c2c; --line: #262626;
+    --fg: #ffffff; --muted: #9a9a9f; --accent: #19a8ff; --accent-ink: #001626; --accent-soft: #2e4158; --accent-soft-ink: #ffffff;
+    --done: #3ccf86; --done-soft: #14301f; --warn: #ff7a5c; --warn-soft: #3a1d17; --gold: #ffdf01;
     color-scheme: dark;
   }
 }
 :root[data-theme="dark"] {
-  --bg: #0f1116; --surface: #181b23; --surface-2: #222632; --line: #2c313e;
-  --fg: #eceef4; --muted: #8b91a3; --accent: #6d8dff; --accent-ink: #0b0e18; --accent-soft: #1f2846;
-  --done: #3ccf86; --done-soft: #15301f; --warn: #ff7a5c; --warn-soft: #3a1d17; --gold: #f0bf45;
+  --bg: #000000; --surface: #1c1c1c; --surface-2: #2c2c2c; --line: #262626;
+  --fg: #ffffff; --muted: #9a9a9f; --accent: #19a8ff; --accent-ink: #001626; --accent-soft: #2e4158; --accent-soft-ink: #ffffff;
+  --done: #3ccf86; --done-soft: #14301f; --warn: #ff7a5c; --warn-soft: #3a1d17; --gold: #ffdf01;
   color-scheme: dark;
 }
 html, body { height: 100%; }
@@ -74,7 +77,7 @@ h2 { font-family: var(--f-display); font-weight: 600; font-size: 15px; letter-sp
 
 .btn { min-height: 48px; padding: 0 18px; border-radius: var(--r); font-weight: 600; display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .btn.primary { background: var(--accent); color: var(--accent-ink); }
-.btn.soft { background: var(--accent-soft); color: var(--accent); }
+.btn.soft { background: var(--accent-soft); color: var(--accent-soft-ink); }
 .btn.plain { background: var(--surface-2); }
 .btn.danger { background: var(--warn-soft); color: var(--warn); }
 .btn.block { width: 100%; }
