@@ -4,6 +4,7 @@ import { S } from './state';
 import { installDelegation } from './ui/actions';
 import { installTabs, renderAll, renderResume, renderView } from './ui/app';
 import { installLiveKeys } from './ui/live';
+import { handleIncomingLink } from './ui/share';
 import { wake } from './ui/wake';
 // Screens register their actions when imported.
 import './ui/exercises';
@@ -20,4 +21,5 @@ installLiveKeys();
 renderView();
 renderResume();
 if (S.active.w) void wake(true);
+void handleIncomingLink();
 void Cloud.init(renderAll);

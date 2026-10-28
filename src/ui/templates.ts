@@ -21,7 +21,7 @@ function planLabel(s: TemplateSet, from: Unit, to: Unit = unit()) {
 }
 
 /** Compress runs of equal sets: "60 × 8 (×3), 65 × 6". */
-function plansSummary(sets: TemplateSet[], from: Unit, to: Unit) {
+export function plansSummary(sets: TemplateSet[], from: Unit, to: Unit) {
   const labels = sets.filter(s => s.type !== 'w').map(s => planLabel(s, from, to) || '–');
   const runs: [string, number][] = [];
   for (const l of labels) { const last = runs[runs.length - 1]; if (last && last[0] === l) last[1]++; else runs.push([l, 1]); }
@@ -45,7 +45,10 @@ function openTemplate(id: string) {
         else { const last = lastPerformance(i.ex), b = last && bestSet(last.sets, last.w.unit); if (b && last) right = 'Last ' + setLabel(b, last.w.unit); }
         return `<div class="tplitem"><span class="nm">${i.sets.length} × ${esc(exById(i.ex).name)}</span><span class="muted small num">${esc(right)}</span></div>`;
       }).join('')}</div>
-      <button class="btn primary block" data-act="tpl-start" data-id="${t.id}">Start workout</button>
+      <div class="list">
+        <button class="btn primary block" data-act="tpl-start" data-id="${t.id}">Start workout</button>
+        <button class="btn soft block" data-act="tpl-share" data-id="${t.id}">${ic('share')}Share template</button>
+      </div>
     </div></div>`);
 }
 
